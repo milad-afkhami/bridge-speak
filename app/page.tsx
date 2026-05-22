@@ -371,8 +371,8 @@ export default function Home() {
   };
 
   return (
-    <div className="h-full flex justify-center bg-black">
-      <main className="w-full max-w-sm flex flex-col select-none">
+    <div className="h-full w-full flex justify-center bg-indigo-950">
+      <main className="w-full max-w-md flex flex-col select-none">
         {/* Person A — English — top half */}
         <section className="flex-1 flex flex-col bg-gray-900 border-b border-gray-700 min-h-0">
           <div className="px-3 pt-2 pb-1 shrink-0">
