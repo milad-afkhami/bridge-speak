@@ -257,10 +257,10 @@ export default function Home() {
     }
   }, []);
 
-  const playAudio = useCallback((base64Mp3: string, onDone: () => void) => {
-    if (!base64Mp3) { onDone(); return; }
+  const playAudio = useCallback((base64: string, format: string, onDone: () => void) => {
+    if (!base64) { onDone(); return; }
     stopAudio();
-    const audio = new Audio(`data:audio/mp3;base64,${base64Mp3}`);
+    const audio = new Audio(`data:audio/${format};base64,${base64}`);
     audioRef.current = audio;
     audio.onended = onDone;
     audio.onerror = onDone;
@@ -279,7 +279,7 @@ export default function Home() {
         timestamp: Date.now(),
       };
       dispatch({ type: "PLAYING", message });
-      playAudio(result.audio, () => dispatch({ type: "DONE" }));
+      playAudio(result.audio, result.audioFormat, () => dispatch({ type: "DONE" }));
     } catch (err) {
       dispatch({ type: "ERROR", error: err instanceof Error ? err.message : "Translation failed", audio: audioBase64, direction });
     }

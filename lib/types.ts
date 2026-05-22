@@ -9,7 +9,7 @@ export interface TranslateResponse {
   sourceText: string;
   targetText: string;
   audio: string; // base64 MP3
-  audioFormat: "mp3";
+  audioFormat: "mp3" | "wav";
 }
 
 export type AppStatus = "idle" | "recording" | "processing" | "playing" | "error";
