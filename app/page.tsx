@@ -75,10 +75,7 @@ const initialState: State = {
 async function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1]);
-    };
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -126,12 +123,7 @@ function Spinner({ className }: { className?: string }) {
 
 // ── Chat Panel ────────────────────────────────────────────────────────────────
 
-interface ChatPanelProps {
-  messages: Message[];
-  perspective: "A" | "B";
-}
-
-function ChatPanel({ messages, perspective }: ChatPanelProps) {
+function ChatPanel({ messages, perspective }: { messages: Message[]; perspective: "A" | "B" }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -140,14 +132,14 @@ function ChatPanel({ messages, perspective }: ChatPanelProps) {
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-600 text-sm italic">
+      <div className="flex-1 flex items-center justify-center text-gray-600 text-sm italic min-h-0">
         Conversation will appear here
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
+    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 min-h-0">
       {messages.map((msg) => {
         const isOwn =
           (perspective === "A" && msg.direction === "en-to-hy") ||
@@ -156,10 +148,12 @@ function ChatPanel({ messages, perspective }: ChatPanelProps) {
         const translation = isOwn ? msg.targetText : msg.sourceText;
 
         return (
-          <div key={msg.id} className={`text-sm ${isOwn ? "text-right" : "text-left"}`}>
-            <div className="font-semibold text-gray-400 text-xs mb-0.5">{isOwn ? "You" : "Them"}</div>
-            <div className="text-white leading-snug">{original}</div>
-            <div className="text-indigo-300 text-xs mt-0.5 italic">→ {translation}</div>
+          <div key={msg.id} className={`flex flex-col gap-0.5 ${isOwn ? "items-end" : "items-start"}`}>
+            <span className="text-[10px] text-gray-500 font-medium px-1">{isOwn ? "You" : "Them"}</span>
+            <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${isOwn ? "bg-indigo-600 rounded-br-sm" : "bg-gray-700 rounded-bl-sm"}`}>
+              <p className="text-white text-sm leading-snug">{original}</p>
+              <p className="text-white/60 text-xs mt-1 italic">→ {translation}</p>
+            </div>
           </div>
         );
       })}
@@ -168,7 +162,7 @@ function ChatPanel({ messages, perspective }: ChatPanelProps) {
   );
 }
 
-// ── Mic Button ────────────────────────────────────────────────────────────────
+// ── Mic Button (large circle) ─────────────────────────────────────────────────
 
 interface MicButtonProps {
   person: "A" | "B";
@@ -182,14 +176,8 @@ interface MicButtonProps {
 }
 
 function MicButton({
-  person,
-  status,
-  activeRecorder,
-  onStartRecording,
-  onStopRecording,
-  onCancelPlayback,
-  onRetry,
-  lastError,
+  person, status, activeRecorder,
+  onStartRecording, onStopRecording, onCancelPlayback, onRetry, lastError,
 }: MicButtonProps) {
   const isRecordingMe = status === "recording" && activeRecorder === person;
   const isOtherRecording = status === "recording" && activeRecorder !== person;
@@ -197,13 +185,10 @@ function MicButton({
 
   if (status === "error" && lastError) {
     return (
-      <div className="flex flex-col items-center gap-2">
-        <div className="text-red-400 text-xs text-center px-2 max-w-48">{lastError}</div>
-        <button
-          onClick={onRetry}
-          className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-colors"
-        >
-          Tap to try again
+      <div className="flex flex-col items-center gap-2 py-2">
+        <p className="text-red-400 text-xs text-center px-4">{lastError}</p>
+        <button onClick={onRetry} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-sm font-medium transition-colors text-white">
+          Tap to retry
         </button>
       </div>
     );
@@ -213,19 +198,17 @@ function MicButton({
     return (
       <button
         onClick={onCancelPlayback}
-        className="flex flex-col items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-2xl transition-colors"
+        className="w-16 h-16 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-colors shadow-lg"
       >
-        <StopIcon className="w-8 h-8 text-white" />
-        <span className="text-xs text-gray-300">Stop playback</span>
+        <StopIcon className="w-7 h-7 text-white" />
       </button>
     );
   }
 
   if (status === "processing") {
     return (
-      <div className="flex flex-col items-center gap-2 px-6 py-3">
-        <Spinner className="w-8 h-8 text-indigo-400" />
-        <span className="text-xs text-gray-400">Translating…</span>
+      <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
+        <Spinner className="w-7 h-7 text-indigo-400" />
       </div>
     );
   }
@@ -234,10 +217,10 @@ function MicButton({
     return (
       <button
         onClick={onStopRecording}
-        className="flex flex-col items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl transition-colors animate-pulse"
+        className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-900/50 relative"
       >
-        <StopIcon className="w-8 h-8 text-white" />
-        <span className="text-xs text-white font-medium">Tap to stop</span>
+        <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-40" />
+        <StopIcon className="w-7 h-7 text-white relative z-10" />
       </button>
     );
   }
@@ -246,14 +229,13 @@ function MicButton({
     <button
       onClick={onStartRecording}
       disabled={disabled}
-      className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-colors ${
+      className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all ${
         disabled
-          ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-          : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white"
+          ? "bg-gray-800 cursor-not-allowed"
+          : "bg-indigo-600 hover:bg-indigo-500 active:scale-95 shadow-indigo-900/50"
       }`}
     >
-      <MicIcon className="w-8 h-8" />
-      <span className="text-xs font-medium">{disabled ? "Please wait…" : "Tap to speak"}</span>
+      <MicIcon className={`w-7 h-7 ${disabled ? "text-gray-600" : "text-white"}`} />
     </button>
   );
 }
@@ -275,49 +257,40 @@ export default function Home() {
     }
   }, []);
 
-  const playAudio = useCallback(
-    (base64Mp3: string, onDone: () => void) => {
-      if (!base64Mp3) { onDone(); return; }
-      stopAudio();
-      const audio = new Audio(`data:audio/mp3;base64,${base64Mp3}`);
-      audioRef.current = audio;
-      audio.onended = onDone;
-      audio.onerror = onDone;
-      audio.play().catch(onDone);
-    },
-    [stopAudio]
-  );
+  const playAudio = useCallback((base64Mp3: string, onDone: () => void) => {
+    if (!base64Mp3) { onDone(); return; }
+    stopAudio();
+    const audio = new Audio(`data:audio/mp3;base64,${base64Mp3}`);
+    audioRef.current = audio;
+    audio.onended = onDone;
+    audio.onerror = onDone;
+    audio.play().catch(onDone);
+  }, [stopAudio]);
 
-  const runTranslation = useCallback(
-    async (audioBase64: string, direction: Direction) => {
-      dispatch({ type: "PROCESSING" });
-      try {
-        const result = await callApi(audioBase64, direction);
-        const message: Message = {
-          id: crypto.randomUUID(),
-          direction,
-          sourceText: result.sourceText,
-          targetText: result.targetText,
-          timestamp: Date.now(),
-        };
-        dispatch({ type: "PLAYING", message });
-        playAudio(result.audio, () => dispatch({ type: "DONE" }));
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Translation failed";
-        dispatch({ type: "ERROR", error: msg, audio: audioBase64, direction });
-      }
-    },
-    [playAudio]
-  );
+  const runTranslation = useCallback(async (audioBase64: string, direction: Direction) => {
+    dispatch({ type: "PROCESSING" });
+    try {
+      const result = await callApi(audioBase64, direction);
+      const message: Message = {
+        id: crypto.randomUUID(),
+        direction,
+        sourceText: result.sourceText,
+        targetText: result.targetText,
+        timestamp: Date.now(),
+      };
+      dispatch({ type: "PLAYING", message });
+      playAudio(result.audio, () => dispatch({ type: "DONE" }));
+    } catch (err) {
+      dispatch({ type: "ERROR", error: err instanceof Error ? err.message : "Translation failed", audio: audioBase64, direction });
+    }
+  }, [playAudio]);
 
   const startRecording = useCallback(async (person: "A" | "B") => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mediaRecorderRef.current = recorder;
       pendingPersonRef.current = person;
       recorder.start();
@@ -331,12 +304,10 @@ export default function Home() {
     const recorder = mediaRecorderRef.current;
     if (!recorder) return;
     dispatch({ type: "STOP_RECORDING" });
-
     recorder.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
       recorder.stream.getTracks().forEach((t) => t.stop());
       mediaRecorderRef.current = null;
-
       try {
         const base64 = await blobToBase64(blob);
         const direction: Direction = pendingPersonRef.current === "A" ? "en-to-hy" : "hy-to-en";
@@ -345,7 +316,6 @@ export default function Home() {
         dispatch({ type: "ERROR", error: "Failed to process audio" });
       }
     };
-
     recorder.stop();
   }, [runTranslation]);
 
@@ -361,7 +331,7 @@ export default function Home() {
     }
   }, [state.pendingAudio, state.pendingDirection, runTranslation]);
 
-  const sharedMicProps = {
+  const micProps = {
     status: state.status,
     activeRecorder: state.activeRecorder,
     onStopRecording: stopRecording,
@@ -373,42 +343,52 @@ export default function Home() {
   return (
     <div className="h-full w-full flex justify-center bg-indigo-950">
       <main className="w-full max-w-md flex flex-col select-none">
-        {/* Person A — English — top half */}
-        <section className="flex-1 flex flex-col bg-gray-900 border-b border-gray-700 min-h-0">
-          <div className="px-3 pt-2 pb-1 shrink-0">
+
+        {/*
+          ── ARMENIAN PERSON — top of screen, rotated 180° ──────────────────
+          Physical layout (before rotation, top → bottom):
+            1. Mic button       ← physically at top = Person B's OUTER EDGE after rotation
+            2. Chat panel       ← fills the space
+            3. Language label   ← physically near center = Person B's inner edge
+          After rotation, Person B sees: label (inner) → chat → mic (outer edge ✓)
+        */}
+        <section
+          className="flex-1 flex flex-col bg-gray-900 min-h-0"
+          style={{ transform: "rotate(180deg)" }}
+        >
+          <div className="flex justify-center py-5 shrink-0">
+            <MicButton person="B" onStartRecording={() => startRecording("B")} {...micProps} />
+          </div>
+          <ChatPanel messages={state.messages} perspective="B" />
+          <div className="px-4 py-2 border-t border-gray-800 shrink-0">
+            <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
+              Armenian · Հayerеն
+            </span>
+          </div>
+        </section>
+
+        {/* Center divider */}
+        <div className="h-px bg-gray-700 shrink-0" />
+
+        {/*
+          ── ENGLISH PERSON — bottom of screen, normal orientation ───────────
+          Layout (top → bottom):
+            1. Language label   ← near center (inner edge)
+            2. Chat panel       ← fills the space
+            3. Mic button       ← at physical bottom = Person A's OUTER EDGE ✓
+        */}
+        <section className="flex-1 flex flex-col bg-gray-900 min-h-0">
+          <div className="px-4 py-2 border-b border-gray-800 shrink-0">
             <span className="text-xs font-semibold text-indigo-400 uppercase tracking-widest">
               English
             </span>
           </div>
           <ChatPanel messages={state.messages} perspective="A" />
-          <div className="flex justify-center py-4 shrink-0">
-            <MicButton
-              person="A"
-              onStartRecording={() => startRecording("A")}
-              {...sharedMicProps}
-            />
+          <div className="flex justify-center py-5 shrink-0">
+            <MicButton person="A" onStartRecording={() => startRecording("A")} {...micProps} />
           </div>
         </section>
 
-        {/* Person B — Armenian — bottom half, rotated 180° */}
-        <section
-          className="flex-1 flex flex-col bg-gray-900 min-h-0"
-          style={{ transform: "rotate(180deg)" }}
-        >
-          <div className="px-3 pt-2 pb-1 shrink-0">
-            <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
-              Armenian · Հայerеն
-            </span>
-          </div>
-          <ChatPanel messages={state.messages} perspective="B" />
-          <div className="flex justify-center py-4 shrink-0">
-            <MicButton
-              person="B"
-              onStartRecording={() => startRecording("B")}
-              {...sharedMicProps}
-            />
-          </div>
-        </section>
       </main>
     </div>
   );
