@@ -140,14 +140,14 @@ function ChatPanel({ messages, perspective }: ChatPanelProps) {
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-600 text-sm italic">
+      <div className="flex-1 flex items-center justify-center text-gray-600 text-sm italic min-h-0">
         Conversation will appear here
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
+    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 min-h-0">
       {messages.map((msg) => {
         const isOwn =
           (perspective === "A" && msg.direction === "en-to-hy") ||
@@ -157,9 +157,9 @@ function ChatPanel({ messages, perspective }: ChatPanelProps) {
 
         return (
           <div key={msg.id} className={`text-sm ${isOwn ? "text-right" : "text-left"}`}>
-            <div className="font-semibold text-gray-400 text-xs mb-0.5">{isOwn ? "You" : "Them"}</div>
+            <div className="text-gray-500 text-xs mb-0.5 font-medium">{isOwn ? "You" : "Them"}</div>
             <div className="text-white leading-snug">{original}</div>
-            <div className="text-indigo-300 text-xs mt-0.5 italic">→ {translation}</div>
+            <div className="text-indigo-300 text-xs mt-1 italic">→ {translation}</div>
           </div>
         );
       })}
@@ -197,11 +197,11 @@ function MicButton({
 
   if (status === "error" && lastError) {
     return (
-      <div className="flex flex-col items-center gap-2">
-        <div className="text-red-400 text-xs text-center px-2 max-w-48">{lastError}</div>
+      <div className="flex flex-col items-center gap-2 py-1">
+        <div className="text-red-400 text-xs text-center px-4 max-w-xs">{lastError}</div>
         <button
           onClick={onRetry}
-          className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-colors"
+          className="px-5 py-2.5 bg-red-600 hover:bg-red-500 rounded-xl text-sm font-semibold transition-colors"
         >
           Tap to try again
         </button>
@@ -213,19 +213,19 @@ function MicButton({
     return (
       <button
         onClick={onCancelPlayback}
-        className="flex flex-col items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-2xl transition-colors"
+        className="flex items-center gap-3 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 rounded-2xl transition-colors"
       >
-        <StopIcon className="w-8 h-8 text-white" />
-        <span className="text-xs text-gray-300">Stop playback</span>
+        <StopIcon className="w-6 h-6 text-white" />
+        <span className="text-sm text-gray-200 font-medium">Stop playback</span>
       </button>
     );
   }
 
   if (status === "processing") {
     return (
-      <div className="flex flex-col items-center gap-2 px-6 py-3">
-        <Spinner className="w-8 h-8 text-indigo-400" />
-        <span className="text-xs text-gray-400">Translating…</span>
+      <div className="flex items-center gap-3 px-6 py-3.5">
+        <Spinner className="w-6 h-6 text-indigo-400" />
+        <span className="text-sm text-gray-400">Translating…</span>
       </div>
     );
   }
@@ -234,10 +234,14 @@ function MicButton({
     return (
       <button
         onClick={onStopRecording}
-        className="flex flex-col items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl transition-colors animate-pulse"
+        className="flex items-center gap-3 px-6 py-3.5 bg-red-600 hover:bg-red-500 rounded-2xl transition-colors"
       >
-        <StopIcon className="w-8 h-8 text-white" />
-        <span className="text-xs text-white font-medium">Tap to stop</span>
+        {/* Pulsing red dot */}
+        <span className="relative flex h-4 w-4 shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75" />
+          <span className="relative inline-flex rounded-full h-4 w-4 bg-red-200" />
+        </span>
+        <span className="text-sm text-white font-semibold">Tap to stop</span>
       </button>
     );
   }
@@ -246,15 +250,29 @@ function MicButton({
     <button
       onClick={onStartRecording}
       disabled={disabled}
-      className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-colors ${
+      className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl transition-colors ${
         disabled
           ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-          : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white"
+          : "bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white shadow-lg shadow-indigo-900/40"
       }`}
     >
-      <MicIcon className="w-8 h-8" />
-      <span className="text-xs font-medium">{disabled ? "Please wait…" : "Tap to speak"}</span>
+      <MicIcon className="w-6 h-6 shrink-0" />
+      <span className="text-sm font-semibold">{disabled ? "Please wait…" : "Tap to speak"}</span>
     </button>
+  );
+}
+
+// ── Desktop Guard ─────────────────────────────────────────────────────────────
+
+function DesktopGuard() {
+  return (
+    <div className="hidden sm:flex h-full flex-col items-center justify-center text-center px-8 gap-4">
+      <div className="text-5xl">📱</div>
+      <p className="text-gray-300 text-lg font-medium">Open on your phone</p>
+      <p className="text-gray-500 text-sm max-w-xs">
+        BridgeSpeak is designed for two people sharing a single mobile device.
+      </p>
+    </div>
   );
 }
 
@@ -277,6 +295,7 @@ export default function Home() {
 
   const playAudio = useCallback(
     (base64Mp3: string, onDone: () => void) => {
+      if (!base64Mp3) { onDone(); return; }
       stopAudio();
       const audio = new Audio(`data:audio/mp3;base64,${base64Mp3}`);
       audioRef.current = audio;
@@ -335,7 +354,6 @@ export default function Home() {
       const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
       recorder.stream.getTracks().forEach((t) => t.stop());
       mediaRecorderRef.current = null;
-
       try {
         const base64 = await blobToBase64(blob);
         const direction: Direction = pendingPersonRef.current === "A" ? "en-to-hy" : "hy-to-en";
@@ -370,43 +388,59 @@ export default function Home() {
   };
 
   return (
-    <main className="h-full flex flex-col select-none">
-      {/* Person A — English — top half */}
-      <section className="flex-1 flex flex-col bg-gray-900 border-b border-gray-700 min-h-0">
-        <div className="px-3 pt-2 pb-1 shrink-0">
-          <span className="text-xs font-semibold text-indigo-400 uppercase tracking-widest">
-            English
-          </span>
-        </div>
-        <ChatPanel messages={state.messages} perspective="A" />
-        <div className="flex justify-center py-4 shrink-0">
-          <MicButton
-            person="A"
-            onStartRecording={() => startRecording("A")}
-            {...sharedMicProps}
-          />
-        </div>
-      </section>
+    <>
+      {/* Desktop: show redirect message */}
+      <DesktopGuard />
 
-      {/* Person B — Armenian — bottom half, rotated 180° */}
-      <section
-        className="flex-1 flex flex-col bg-gray-900 min-h-0"
-        style={{ transform: "rotate(180deg)" }}
-      >
-        <div className="px-3 pt-2 pb-1 shrink-0">
-          <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
-            Armenian · Հայերեն
-          </span>
-        </div>
-        <ChatPanel messages={state.messages} perspective="B" />
-        <div className="flex justify-center py-4 shrink-0">
-          <MicButton
-            person="B"
-            onStartRecording={() => startRecording("B")}
-            {...sharedMicProps}
-          />
-        </div>
-      </section>
-    </main>
+      {/* Mobile: full app */}
+      <main className="h-full flex flex-col select-none sm:hidden">
+
+        {/* ── Person A — English ─────────────────────────────────────────────
+            Layout (top → bottom = outer edge → center):
+              1. Language label   (outer edge)
+              2. Mic button
+              3. Chat transcript  (grows toward center)
+        ──────────────────────────────────────────────────────────────────── */}
+        <section className="flex-1 flex flex-col bg-gray-900 border-b border-gray-700 min-h-0">
+          <div className="px-4 pt-3 pb-1 shrink-0">
+            <span className="text-xs font-bold text-indigo-400 tracking-widest uppercase">English</span>
+          </div>
+
+          <div className="flex justify-center py-3 shrink-0">
+            <MicButton person="A" onStartRecording={() => startRecording("A")} {...sharedMicProps} />
+          </div>
+
+          <ChatPanel messages={state.messages} perspective="A" />
+        </section>
+
+        {/* ── Person B — Armenian (rotated 180°) ────────────────────────────
+            Physical layout before rotation (top → bottom):
+              1. Chat transcript  (physically near center)
+              2. Mic button
+              3. Language label   (physically at outer edge / bottom of screen)
+
+            After rotation Person B reads (their top → their bottom):
+              1. Language label   (outer edge — same as Person A experience)
+              2. Mic button
+              3. Chat transcript  (grows toward center)
+        ──────────────────────────────────────────────────────────────────── */}
+        <section
+          className="flex-1 flex flex-col bg-gray-900 min-h-0"
+          style={{ transform: "rotate(180deg)" }}
+        >
+          <ChatPanel messages={state.messages} perspective="B" />
+
+          <div className="flex justify-center py-3 shrink-0">
+            <MicButton person="B" onStartRecording={() => startRecording("B")} {...sharedMicProps} />
+          </div>
+
+          <div className="px-4 pb-3 pt-1 shrink-0">
+            <span className="text-xs font-bold text-amber-400 tracking-widest uppercase">
+              Armenian · Հայerεն
+            </span>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
