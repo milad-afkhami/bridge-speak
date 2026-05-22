@@ -356,14 +356,16 @@ export default function Home() {
           className="flex-1 flex flex-col bg-gray-900 min-h-0"
           style={{ transform: "rotate(180deg)" }}
         >
-          <div className="flex justify-center py-5 shrink-0">
-            <MicButton person="B" onStartRecording={() => startRecording("B")} {...micProps} />
-          </div>
-          <ChatPanel messages={state.messages} perspective="B" />
-          <div className="px-4 py-2 border-t border-gray-800 shrink-0">
+          {/* physically first = visually last after rotation = Person B's inner edge (near center) */}
+          <div className="px-4 py-2 border-b border-gray-800 shrink-0">
             <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
               Armenian · Հayerеն
             </span>
+          </div>
+          <ChatPanel messages={state.messages} perspective="B" />
+          {/* physically last = visually first after rotation = Person B's outer edge (top of screen) */}
+          <div className="flex justify-center py-5 shrink-0">
+            <MicButton person="B" onStartRecording={() => startRecording("B")} {...micProps} />
           </div>
         </section>
 
